@@ -23,6 +23,13 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="CollaborativeFilteringWI.py" />
+    <Compile Include="dataloader.py" />
+    <Compile Include="movie.py" />
+    <Compile Include="user.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="probe.pickle" />
+    <Content Include="training.pickle" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
