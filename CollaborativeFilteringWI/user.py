@@ -9,5 +9,5 @@ class User:
 
     def avg_ratings(self):
         if self.rating == -1:
-           self.rating = sum(self.ratings.values) / float(len(self.ratings))
+           self.rating = sum(self.ratings.values()) / float(len(self.ratings))
         return self.rating
