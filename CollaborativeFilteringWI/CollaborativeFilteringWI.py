@@ -7,6 +7,7 @@ from user import User
 
 movies = {}
 users = {}
+probe_movies = {}
 movie_mean = 0
 user_mean = 0
 
@@ -17,6 +18,15 @@ def load_movies():
     try:
         with open('training.pickle', 'rb') as handle:
             movies = pickle.load(handle)
+    except:
+        print('Load the movies first, dumbass!')
+
+def load_probes():
+    global probe_movies
+
+    try:
+        with open('probe.pickle', 'rb') as handle:
+            probe_movies = pickle.load(handle)
     except:
         print('Load the movies first, dumbass!')
 
@@ -42,7 +52,7 @@ def movie_user_mean():
         for user in movies[key].user_ratings:
             rating += movies[key].user_ratings[user]
 
-    return 1 / N * rating, N
+    return 1 / N * rating
 
 
 def user_means():
@@ -64,7 +74,6 @@ def movie_means():
     res = r_sum / float(len(movies))
     return res
 
-
 def train(K=10):
     global movies, users
     # initilize
@@ -72,22 +81,48 @@ def train(K=10):
     A = np.array([0.1] * len(users) * K).reshape((len(users), K))
     B = np.array([0.1] * len(movies) * K).reshape(K, (len(movies)))
     eta = 0.001
+    mum = movie_user_mean()
 
     for k in range(K):
-        for _ in range(1000):#until convergiance
+        for _ in range(1000):#until convergence
             mov = movies[random.randint(1, len(movies) - 1)]
             usr = users[random.choice(list(mov.user_ratings.keys()))]
-            Rmu = mov.user_ratings[usr.u_id]
+            Rmu = mov.user_ratings[usr.u_id] - mov.get_rating() - usr.avg_ratings() + mum
             #calc
             A[mov.m_id, k] += eta * (Rmu - A[mov.m_id, :].dot(B[:, usr.num])) * B[k, usr.num]
             B[k, usr.num] += eta * A[mov.m_id, k] * (Rmu - A[mov.m_id, :].dot(B[:, usr.num]))
-    g = 0
 
+    return A, B
 
+def predict(A, B, m_id, u_id):
+    global movies, users
+    mum = movie_user_mean()
+    if u_id in users:
+        Rmu = A[m_id, :].dot(B[:, users[u_id].num]) + movies[m_id].get_rating() + users[u_id].avg_ratings() - mum
+    else:
+        Rmu = 0
+        print('User has no previous ratings.')
 
+    return Rmu
 
-def pre_pro(m, u, mum):
-    return 0 - m - u + mum
+def RMSE(A, B):
+    global probe_movies
+
+    sum = 0
+    n = 0
+
+    for mov in probe_movies:
+        for u_id, rating in probe_movies[mov].user_ratings.items():
+            pred_rating = predict(A, B, probe_movies[mov].m_id, u_id)
+            if pred_rating == 0:
+                n -= 1
+            else:
+                sum += (pred_rating - rating)**2
+
+    for key in probe_movies:
+        n += len(probe_movies[key].user_ratings)
+
+    return math.sqrt(sum/n)
 
 
 def zero_test(mum):
@@ -100,10 +135,15 @@ def zero_test(mum):
 
 
 load_movies()
+load_probes()
 load_users()
-a3 = user_means()
-a4 = movie_means()
-a5, n = movie_user_mean()
-#train()
-a6 = zero_test(a5)
-a = 1
+#a3 = user_means()
+#a4 = movie_means()
+#a5, n = movie_user_mean()
+
+#a6 = zero_test(a5)
+#a = 1
+
+A, B = train()
+print('Done')
+#print(predict(A, B, 1, 30878))
