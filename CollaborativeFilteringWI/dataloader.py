@@ -43,4 +43,4 @@ def load(mov_cnt, usr_cnt):
         pickle.dump(training_movies, handle)
 
 if __name__ == '__main__':
-    load(100, 100)
+    load(1000, 1000)
