@@ -4,6 +4,7 @@ import numpy as np
 import random
 from movie import Movie
 from user import User
+from progressTrack import Progress
 
 movies = {}
 users = {}
@@ -74,7 +75,7 @@ def movie_means():
     res = r_sum / float(len(movies))
     return res
 
-def train(K=10):
+def train(K=10, i=1000):
     global movies, users
     # initilize
     random.seed()
@@ -83,41 +84,46 @@ def train(K=10):
     eta = 0.001
     mum = movie_user_mean()
 
+
+    p = Progress(i*K, "training")
     for k in range(K):
-        for _ in range(1000):#until convergence
+        for count in range(i):#until convergence
             mov = movies[random.randint(1, len(movies) - 1)]
             usr = users[random.choice(list(mov.user_ratings.keys()))]
             Rmu = mov.user_ratings[usr.u_id] - mov.get_rating() - usr.avg_ratings() + mum
             #calc
             A[mov.m_id, k] += eta * (Rmu - A[mov.m_id, :].dot(B[:, usr.num])) * B[k, usr.num]
             B[k, usr.num] += eta * A[mov.m_id, k] * (Rmu - A[mov.m_id, :].dot(B[:, usr.num]))
-
+            p.percent(count*k)
     return A, B
 
-def predict(A, B, m_id, u_id):
+
+def predict(A, B, m_id, u_id, mum):
     global movies, users
-    mum = movie_user_mean()
     if u_id in users:
         Rmu = A[m_id, :].dot(B[:, users[u_id].num]) + movies[m_id].get_rating() + users[u_id].avg_ratings() - mum
     else:
         Rmu = 0
-        print('User has no previous ratings.')
+        #print('User has no previous ratings.')
 
     return Rmu
 
+
 def RMSE(A, B):
     global probe_movies
-
+    mum = movie_user_mean()
     sum = 0
     n = 0
+    p = Progress(len(probe_movies))
 
     for mov in probe_movies:
         for u_id, rating in probe_movies[mov].user_ratings.items():
-            pred_rating = predict(A, B, probe_movies[mov].m_id, u_id)
+            pred_rating = predict(A, B, probe_movies[mov].m_id, u_id, mum)
             if pred_rating == 0:
                 n -= 1
             else:
                 sum += (pred_rating - rating)**2
+        p.percent(mov)
 
     for key in probe_movies:
         n += len(probe_movies[key].user_ratings)
@@ -137,13 +143,17 @@ def zero_test(mum):
 load_movies()
 load_probes()
 load_users()
+print("Loading... done")
 #a3 = user_means()
 #a4 = movie_means()
 #a5, n = movie_user_mean()
-
+#print(predict(A, B, 1, 30878))
 #a6 = zero_test(a5)
 #a = 1
+ks = [10, 20, 30, 40, 50]
+its = [1000, 10000, 50000]
+for k in ks:
+    for i in its:
+        A, B = train(k, i)
+        print("k=", k, "iters=", i, "RMSE=", RMSE(A, B))
 
-A, B = train()
-print('Done')
-#print(predict(A, B, 1, 30878))
