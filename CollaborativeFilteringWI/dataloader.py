@@ -30,11 +30,11 @@ def load(mov_cnt, usr_cnt):
                 mov_id = int(line[:-2])
             elif mov_id <= mov_cnt:
                 u_id = int(line)
-                training_movies[mov_id].remove_user(u_id)
                 if mov_id not in probe_movies:
-                    probe_movies[mov_id] = Movie(mov_id, {u_id: None})
+                    probe_movies[mov_id] = Movie(mov_id, {u_id: training_movies[mov_id].user_ratings[u_id]})
                 else:
-                    probe_movies[mov_id].add_user(u_id)
+                    probe_movies[mov_id].add_user(u_id, training_movies[mov_id].user_ratings[u_id])
+                training_movies[mov_id].remove_user(u_id)
 
     with open('probe.pickle', 'wb+') as handle:
         pickle.dump(probe_movies, handle)
