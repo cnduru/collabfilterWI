@@ -74,7 +74,7 @@ def train(K=10):
     eta = 0.001
 
     for k in range(K):
-        for _ in range(100000):#until convergiance
+        for _ in range(1000):#until convergiance
             mov = movies[random.randint(1, len(movies) - 1)]
             usr = users[random.choice(list(mov.user_ratings.keys()))]
             Rmu = mov.user_ratings[usr.u_id]
@@ -92,11 +92,11 @@ def pre_pro(m, u, mum):
 
 def zero_test(mum):
     global movies, users
-    res = 0
+    pp_all_ratings = []
     for mov in movies.values():
-        for us in users.values():
-            res += pre_pro(mov.get_rating(), us.avg_ratings(), mum)
-    return res
+        for u_id, rating in mov.user_ratings.items():
+            pp_all_ratings.append(rating - mov.get_rating() - users[u_id].avg_ratings() + mum)
+    return sum(pp_all_ratings)
 
 
 load_movies()
@@ -104,5 +104,6 @@ load_users()
 a3 = user_means()
 a4 = movie_means()
 a5, n = movie_user_mean()
-train()
-# a6 = zero_test(a5)
+#train()
+a6 = zero_test(a5)
+a = 1
