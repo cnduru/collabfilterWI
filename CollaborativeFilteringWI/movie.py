@@ -15,7 +15,5 @@ class Movie:
 
     def get_rating(self):
         if self.rating == -1:
-
             self.rating = sum(self.user_ratings.values()) / float(len(self.user_ratings))
-
         return self.rating
